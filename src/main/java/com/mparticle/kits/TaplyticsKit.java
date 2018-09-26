@@ -12,17 +12,11 @@ import java.math.BigDecimal;
 
 import com.mparticle.MPEvent;
 import com.mparticle.MParticle;
-import com.mparticle.MParticleOptions;
-import com.mparticle.MParticleTask;
 import com.mparticle.commerce.CommerceEvent;
 import com.mparticle.commerce.Product;
 import com.mparticle.commerce.TransactionAttributes;
-import com.mparticle.identity.IdentityApiRequest;
-import com.mparticle.identity.IdentityApiResult;
 
-import com.taplytics.sdk.SessionInfoRetrievedListener;
 import com.taplytics.sdk.Taplytics;
-import com.taplytics.sdk.TaplyticsExperimentsLoadedListener;
 import com.taplytics.sdk.TaplyticsHasUserOptedOutListener;
 
 import org.json.JSONObject;
@@ -38,8 +32,10 @@ public class TaplyticsKit extends KitIntegration
      */
     private static final String API_KEY = "apiKey";
     private static final String AGGRESSIVE = "TaplyticsOptionAggressive";
+    private static final String TAPLYTICS_AGGRESSIVE = "aggressive";
     private static final String USER_ID = "user_id";
     private static final String EMAIL = "email";
+    private static final String DELAYED_START = "delayedStartTaplytics";
 
     /**
      * tlOptions get and set methods
@@ -47,83 +43,57 @@ public class TaplyticsKit extends KitIntegration
 
     private static Map<String, Object> tlOptions = new HashMap<>();
 
-    public static Map<String, Object> getTlOptions() { return tlOptions; }
+    public static Map<String, Object> getTlOptions() {
+        return tlOptions;
+    }
 
     public static void setTlOptions(Map<String, Object> options) {
         tlOptions = options;
     }
 
     private HashMap<String, Object> mergeOptions(Map<String, Object> tlOptions, Map<String, Object> configuration) {
+        if (tlOptions == null) {
+            tlOptions = new HashMap<>();
+        }
+        if (configuration == null) {
+            configuration = new HashMap<>();
+        }
         HashMap<String, Object> merged = new HashMap<>(configuration);
-
-        if (tlOptions != null) {
-            for (Map.Entry<String, Object> entry : tlOptions.entrySet()) {
-                merged.put(entry.getKey(), entry.getValue());
-            }
+        for (Map.Entry<String, Object> entry : tlOptions.entrySet()) {
+            merged.put(entry.getKey(), entry.getValue());
         }
         return merged;
     }
 
     @Override
     protected List<ReportingMessage> onKitCreate(Map<String, String> settings, Context context) {
-        if (tlOptions == null) {
-            tlOptions = new HashMap<>();
-        }
         startTaplytics(settings, context);
         return null;
     }
 
-    /**
-     * Report Messaging Helper methods
-     */
-
-    private ReportingMessage createReportMessage(String reportMessage) {
-        return new ReportingMessage(this,
-                                    reportMessage,
-                                    System.currentTimeMillis(),
-                                    null);
-    }
-
-    private List<ReportingMessage> createReportingMessages(ReportingMessage report) {
-        return Collections.singletonList(report);
-    }
-
     private List<ReportingMessage> createReportingMessages(String message) {
-        return Collections.singletonList(createReportMessage(message));
+        ReportingMessage reportingMessage = new ReportingMessage(this,
+                message,
+                System.currentTimeMillis(),
+                null);
+        return Collections.singletonList(reportingMessage);
     }
-
-    /**
-     * Start Taplytics
-     * @param settings
-     * @param context
-     */
 
     private void startTaplytics(Map<String, String> settings, Context context) {
         String apiKey = getAPIKey(settings);
         HashMap<String, Object> options = mergeOptions(getTlOptions(), getOptionsFromConfiguration(settings));
-        options.put("delayedStartTaplytics", true);
-
-        if (options != null) {
-            Taplytics.startTaplytics(context, apiKey, options);
-            return;
-        }
-
-        Taplytics.startTaplytics(context, apiKey);
+        options.put(DELAYED_START, true);
+        Taplytics.startTaplytics(context, apiKey, options);
     }
 
     private String getAPIKey(Map<String, String> settings) {
-        final String apiKey = getSettings().get(API_KEY);
+        final String apiKey = settings.get(API_KEY);
         if (KitUtils.isEmpty(apiKey)) {
             throw new IllegalArgumentException("Failed to initialize Taplytics SDK - an API key is required");
         }
         return apiKey;
     }
 
-    /**
-     * Get Taplytics options from settings
-     * @param settings
-     * @return
-     */
 
     private Map<String, Object> getOptionsFromConfiguration(Map<String, String> settings) {
         Map<String, Object> options = new HashMap<>();
@@ -134,7 +104,7 @@ public class TaplyticsKit extends KitIntegration
 
     private void addAggressiveOption(Map<String, Object> options, Map<String, String> settings) {
         Boolean agg = Boolean.parseBoolean(settings.get(AGGRESSIVE));
-        options.put("aggressive", agg.booleanValue());
+        options.put(TAPLYTICS_AGGRESSIVE, agg.booleanValue());
     }
 
     @Override
@@ -150,7 +120,11 @@ public class TaplyticsKit extends KitIntegration
     public void setUserAttribute(String attributeKey, String attributeValue) {
         try {
             JSONObject attr = new JSONObject();
-            attr.put(attributeKey, attributeValue);
+            if (attributeValue != null) {
+                attr.put(attributeKey, attributeValue);
+            } else {
+                attr.put(attributeKey, "");
+            }
             Taplytics.setUserAttributes(attr);
         } catch (JSONException e) {
 
@@ -191,8 +165,8 @@ public class TaplyticsKit extends KitIntegration
         setUserAttribute(attribute, null);
     }
 
-    /*
-        Unsupported methods
+    /**
+     * Unsupported methods
      */
     @Override
     public List<ReportingMessage> logout() { return null; }
@@ -223,17 +197,10 @@ public class TaplyticsKit extends KitIntegration
             }
 
             Taplytics.logRevenue(id, revenue);
-            return createReportingMessages(ReportingMessage.MessageType.COMMERCE_EVENT);
+            return Collections.singletonList(ReportingMessage.fromEvent(this, event));
         }
         return null;
     }
-
-    /*
-        Unsupported Methods
-     */
-
-    @Override
-    public List<ReportingMessage> logLtvIncrease(BigDecimal valueIncreased, BigDecimal valueTotal, String eventName, Map<String, String> contextInfo) { return null; }
 
     /**
      * EventListener Interface
@@ -243,7 +210,7 @@ public class TaplyticsKit extends KitIntegration
     public List<ReportingMessage> logEvent(MPEvent event) {
         String eventName = event.getEventName();
         Taplytics.logEvent(eventName);
-        return createReportingMessages(ReportingMessage.fromEvent(this, event));
+        return Collections.singletonList(ReportingMessage.fromEvent(this, event));
     }
 
     @Override
@@ -252,8 +219,8 @@ public class TaplyticsKit extends KitIntegration
         return createReportingMessages(ReportingMessage.MessageType.SCREEN_VIEW);
     }
 
-    /*
-        Unsupported Methods
+    /**
+     * Unsupported Methods
      */
 
     @Override
@@ -265,11 +232,9 @@ public class TaplyticsKit extends KitIntegration
     @Override
     public List<ReportingMessage> leaveBreadcrumb(String breadcrumb) { return null; }
 
-    /**
-     * Set opt out for Taplytics
-     * @param optedOut
-     * @return
-     */
+    //put all these together
+    @Override
+    public List<ReportingMessage> logLtvIncrease(BigDecimal valueIncreased, BigDecimal valueTotal, String eventName, Map<String, String> contextInfo) { return null; }
 
     @Override
     public List<ReportingMessage> setOptOut(final boolean optedOut) {
