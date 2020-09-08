@@ -5,11 +5,12 @@ buildscript {
 
     repositories {
         mavenLocal()
-        mavenCentral()
+        jcenter()
         google()
     }
     dependencies {
         classpath 'com.mparticle:android-kit-plugin:' + project.version
+        classpath 'com.android.tools.build:gradle:4.0.1'
     }
 }
 
