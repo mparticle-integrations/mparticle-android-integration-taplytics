@@ -16,16 +16,21 @@ import com.mparticle.commerce.CommerceEvent;
 import com.mparticle.commerce.Product;
 import com.mparticle.commerce.TransactionAttributes;
 
+import com.mparticle.identity.MParticleUser;
 import com.taplytics.sdk.Taplytics;
 import com.taplytics.sdk.TaplyticsHasUserOptedOutListener;
+import com.taplytics.sdk.TaplyticsResetUserListener;
 
 import org.json.JSONObject;
+
+import static com.mparticle.MParticle.IdentityType;
 
 public class TaplyticsKit extends KitIntegration
         implements
         KitIntegration.AttributeListener,
         KitIntegration.EventListener,
-        KitIntegration.CommerceListener {
+        KitIntegration.CommerceListener,
+        KitIntegration.IdentityListener {
 
     /**
      * Option Keys
@@ -164,6 +169,57 @@ public class TaplyticsKit extends KitIntegration
     public void removeUserAttribute(String attribute) {
         setUserAttribute(attribute, null);
     }
+
+    @Override
+    public void onIdentifyCompleted(MParticleUser mParticleUser, FilteredIdentityApiRequest filteredIdentityApiRequest) {
+        setUserAttributeFromRequest(filteredIdentityApiRequest);
+    }
+
+    /**
+     * Identity Listener
+     */
+
+    public void setUserAttributeFromRequest(FilteredIdentityApiRequest request) {
+        Map<MParticle.IdentityType, String> identities = request.userIdentities;
+        try {
+            JSONObject attr = new JSONObject();
+            if (identities.get(IdentityType.CustomerId) != null) {
+                attr.put(USER_ID, identities.get(IdentityType.CustomerId));
+            }
+            if (identities.get(IdentityType.Email) != null) {
+                attr.put(EMAIL, identities.get(IdentityType.Email));
+            }
+            Taplytics.setUserAttributes(attr);
+        } catch (JSONException e) {
+
+        }
+    }
+
+    @Override
+    public void onLoginCompleted(MParticleUser user, FilteredIdentityApiRequest request) {
+        setUserAttributeFromRequest(request);
+    }
+
+    @Override
+    public void onLogoutCompleted(MParticleUser mParticleUser, FilteredIdentityApiRequest filteredIdentityApiRequest) {
+        Taplytics.resetAppUser(new TaplyticsResetUserListener() {
+            @Override
+            public void finishedResettingUser() {
+                // no-op
+            }
+        });
+    }
+
+    @Override
+    public void onModifyCompleted(MParticleUser mParticleUser, FilteredIdentityApiRequest filteredIdentityApiRequest) {
+        // no-op
+    }
+
+    @Override
+    public void onUserIdentified(MParticleUser mParticleUser) {
+        // no-op
+    }
+
 
     /**
      * Unsupported methods
