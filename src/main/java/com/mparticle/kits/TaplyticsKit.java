@@ -149,19 +149,6 @@ public class TaplyticsKit extends KitIntegration
     }
 
     @Override
-    public void setUserIdentity(MParticle.IdentityType identityType, String identity) {
-        switch (identityType) {
-            case CustomerId: {
-                setUserAttribute(USER_ID, identity);
-                break;
-            }
-            case Email: {
-                setUserAttribute(EMAIL, identity);
-            }
-        }
-    }
-
-    @Override
     public void removeUserIdentity(MParticle.IdentityType identityType) {
         setUserIdentity(identityType, null);
     }
@@ -170,6 +157,11 @@ public class TaplyticsKit extends KitIntegration
     @Override
     public void removeUserAttribute(String attribute) {
         setUserAttribute(attribute, null);
+    }
+
+    @Override
+    public void setUserIdentity(IdentityType identityType, String s) {
+        // no-op
     }
 
     @Override
