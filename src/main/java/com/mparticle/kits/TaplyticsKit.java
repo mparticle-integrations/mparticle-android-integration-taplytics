@@ -149,6 +149,11 @@ public class TaplyticsKit extends KitIntegration
     }
 
     @Override
+    public void setUserIdentity(IdentityType identityType, String s) {
+        // no-op
+    }
+
+    @Override
     public void removeUserIdentity(MParticle.IdentityType identityType) {
         setUserIdentity(identityType, null);
     }
@@ -157,11 +162,6 @@ public class TaplyticsKit extends KitIntegration
     @Override
     public void removeUserAttribute(String attribute) {
         setUserAttribute(attribute, null);
-    }
-
-    @Override
-    public void setUserIdentity(IdentityType identityType, String s) {
-        // no-op
     }
 
     @Override
