@@ -132,7 +132,9 @@ public class TaplyticsKit extends KitIntegration
     }
 
     @Override
-    public boolean supportsAttributeLists() { return false; }
+    public boolean supportsAttributeLists() {
+        return false;
+    }
 
     @Override
     public void setAllUserAttributes(Map<String, String> attributes, Map<String, List<String>> attributeLists) {
@@ -169,10 +171,13 @@ public class TaplyticsKit extends KitIntegration
      * Unsupported methods
      */
     @Override
-    public List<ReportingMessage> logout() { return null; }
+    public List<ReportingMessage> logout() {
+        return null;
+    }
 
     @Override
-    public void setUserAttributeList(String attribute, List<String> attributeValueList) { }
+    public void setUserAttributeList(String attribute, List<String> attributeValueList) {
+    }
 
     /**
      * CommerceListener Interface
@@ -208,8 +213,15 @@ public class TaplyticsKit extends KitIntegration
 
     @Override
     public List<ReportingMessage> logEvent(MPEvent event) {
-        String eventName = event.getEventName();
-        Taplytics.logEvent(eventName);
+        final String eventName = event.getEventName();
+        final Map<String, String> metaDataMap = event.getCustomAttributes();
+
+        JSONObject metaData = null;
+        if (metaDataMap != null) {
+            metaData = new JSONObject(metaDataMap);
+        }
+
+        Taplytics.logEvent(eventName, null, metaData);
         return Collections.singletonList(ReportingMessage.fromEvent(this, event));
     }
 
@@ -224,17 +236,25 @@ public class TaplyticsKit extends KitIntegration
      */
 
     @Override
-    public List<ReportingMessage> logException(Exception exception, Map<String, String> exceptionAttributes, String message) { return null; }
+    public List<ReportingMessage> logException(Exception exception, Map<String, String> exceptionAttributes, String message) {
+        return null;
+    }
 
     @Override
-    public List<ReportingMessage> logError(String message, Map<String, String> errorAttributes) { return null; }
+    public List<ReportingMessage> logError(String message, Map<String, String> errorAttributes) {
+        return null;
+    }
 
     @Override
-    public List<ReportingMessage> leaveBreadcrumb(String breadcrumb) { return null; }
+    public List<ReportingMessage> leaveBreadcrumb(String breadcrumb) {
+        return null;
+    }
 
     //put all these together
     @Override
-    public List<ReportingMessage> logLtvIncrease(BigDecimal valueIncreased, BigDecimal valueTotal, String eventName, Map<String, String> contextInfo) { return null; }
+    public List<ReportingMessage> logLtvIncrease(BigDecimal valueIncreased, BigDecimal valueTotal, String eventName, Map<String, String> contextInfo) {
+        return null;
+    }
 
     @Override
     public List<ReportingMessage> setOptOut(final boolean optedOut) {
