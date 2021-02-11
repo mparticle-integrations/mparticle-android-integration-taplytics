@@ -21,6 +21,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.taplytics.sdk:taplytics:2.9.1@aar'
+    implementation 'com.taplytics.sdk:taplytics:2.10.3@aar'
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 }
