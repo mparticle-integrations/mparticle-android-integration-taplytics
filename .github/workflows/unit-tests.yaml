@@ -13,7 +13,4 @@ jobs:
         with:
           java-version: 1.8
       - name: Clean and Run Unit Tests
-        uses: eskatos/gradle-command-action@v1
-        with:
-          gradle-version: 6.6.1
-          arguments: clean assemble test
+        run: ./gradlew clean assemble test
