@@ -205,8 +205,8 @@ public class TaplyticsKit extends KitIntegration
     }
 
     @Override
-    public void onModifyCompleted(MParticleUser mParticleUser, FilteredIdentityApiRequest filteredIdentityApiRequest) {
-        // no-op
+    public void onModifyCompleted(MParticleUser mParticleUser, FilteredIdentityApiRequest request) {
+        setUserAttributeFromRequest(request);
     }
 
     @Override
