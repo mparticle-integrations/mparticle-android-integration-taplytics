@@ -30,7 +30,8 @@ public class TaplyticsKit extends KitIntegration
         KitIntegration.AttributeListener,
         KitIntegration.EventListener,
         KitIntegration.CommerceListener,
-        KitIntegration.IdentityListener {
+        KitIntegration.IdentityListener,
+        KitIntegration.SessionListener {
 
     /**
      * Option Keys
@@ -41,6 +42,9 @@ public class TaplyticsKit extends KitIntegration
     private static final String USER_ID = "user_id";
     private static final String EMAIL = "email";
     private static final String DELAYED_START = "delayedStartTaplytics";
+
+    public static boolean delayInitializationUntilSessionStart = false;
+    protected static boolean started = false;
 
     /**
      * tlOptions get and set methods
@@ -72,7 +76,10 @@ public class TaplyticsKit extends KitIntegration
 
     @Override
     protected List<ReportingMessage> onKitCreate(Map<String, String> settings, Context context) {
-        startTaplytics(settings, context);
+        if (!started && !delayInitializationUntilSessionStart) {
+            started = true;
+            startTaplytics(settings, context);
+        }
         return null;
     }
 
@@ -84,7 +91,7 @@ public class TaplyticsKit extends KitIntegration
         return Collections.singletonList(reportingMessage);
     }
 
-    private void startTaplytics(Map<String, String> settings, Context context) {
+    protected void startTaplytics(Map<String, String> settings, Context context) {
         String apiKey = getAPIKey(settings);
         HashMap<String, Object> options = mergeOptions(getTlOptions(), getOptionsFromConfiguration(settings));
         options.put(DELAYED_START, true);
@@ -318,5 +325,19 @@ public class TaplyticsKit extends KitIntegration
         });
 
         return createReportingMessages(ReportingMessage.MessageType.OPT_OUT);
+    }
+
+    @Override
+    public List<ReportingMessage> onSessionStart() {
+        if (!started && delayInitializationUntilSessionStart) {
+            started = true;
+            startTaplytics(getConfiguration().getSettings(), getContext());
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<ReportingMessage> onSessionEnd() {
+        return null;
     }
 }
