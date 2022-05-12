@@ -269,7 +269,7 @@ public class TaplyticsKit extends KitIntegration
     @Override
     public List<ReportingMessage> logEvent(MPEvent event) {
         final String eventName = event.getEventName();
-        final Map<String, String> metaDataMap = event.getCustomAttributes();
+        final Map<String, String> metaDataMap = event.getCustomAttributeStrings();
 
         JSONObject metaData = null;
         if (metaDataMap != null) {
