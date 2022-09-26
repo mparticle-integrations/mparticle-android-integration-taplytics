@@ -25,5 +25,5 @@ repositories {
 }
 
 dependencies {
-    api 'com.taplytics.sdk:taplytics:3.0.2@aar'
+    api 'com.taplytics.sdk:taplytics:3.0.3@aar'
 }
