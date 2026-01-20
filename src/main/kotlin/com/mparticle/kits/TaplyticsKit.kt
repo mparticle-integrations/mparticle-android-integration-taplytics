@@ -1,27 +1,32 @@
 package com.mparticle.kits
 
 import android.content.Context
+import com.mparticle.MPEvent
+import com.mparticle.MParticle.IdentityType
+import com.mparticle.commerce.CommerceEvent
+import com.mparticle.commerce.Product
+import com.mparticle.identity.MParticleUser
 import com.mparticle.kits.KitIntegration.AttributeListener
 import com.mparticle.kits.KitIntegration.CommerceListener
 import com.mparticle.kits.KitIntegration.IdentityListener
 import com.mparticle.kits.KitIntegration.SessionListener
-import java.util.HashMap
 import com.taplytics.sdk.Taplytics
-import org.json.JSONObject
 import org.json.JSONException
-import com.mparticle.MParticle.IdentityType
-import com.mparticle.identity.MParticleUser
-import com.mparticle.commerce.CommerceEvent
-import com.mparticle.commerce.Product
-import com.mparticle.MPEvent
+import org.json.JSONObject
 import java.lang.Exception
 import java.math.BigDecimal
+import java.util.HashMap
 
-open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.EventListener,
-    CommerceListener, IdentityListener, SessionListener {
+open class TaplyticsKit :
+    KitIntegration(),
+    AttributeListener,
+    KitIntegration.EventListener,
+    CommerceListener,
+    IdentityListener,
+    SessionListener {
     private fun mergeOptions(
         tlOptions: Map<String?, Any?>,
-        configuration: MutableMap<String, Any>?
+        configuration: MutableMap<String, Any>?,
     ): HashMap<String?, Any?> {
         var tlOptions: Map<String?, Any?>? = tlOptions
         var configuration = configuration
@@ -40,7 +45,7 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
 
     public override fun onKitCreate(
         settings: Map<String, String>,
-        context: Context
+        context: Context,
     ): List<ReportingMessage> {
         if (!started && !delayInitializationUntilSessionStart) {
             started = true
@@ -50,16 +55,20 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
     }
 
     private fun createReportingMessages(message: String): List<ReportingMessage> {
-        val reportingMessage = ReportingMessage(
-            this,
-            message,
-            System.currentTimeMillis(),
-            null
-        )
+        val reportingMessage =
+            ReportingMessage(
+                this,
+                message,
+                System.currentTimeMillis(),
+                null,
+            )
         return listOf(reportingMessage)
     }
 
-    protected open fun startTaplytics(settings: Map<String, String>, context: Context?) {
+    protected open fun startTaplytics(
+        settings: Map<String, String>,
+        context: Context?,
+    ) {
         val apiKey = getAPIKey(settings)
         val options = mergeOptions(tlOptions, getOptionsFromConfiguration(settings))
         options[DELAYED_START] = true
@@ -68,19 +77,19 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
 
     private fun getAPIKey(settings: Map<String, String>): String? {
         val apiKey = settings[API_KEY]
-        require(!KitUtils.isEmpty(apiKey)) { FAILED_TO_INITIALIZE_KIT_MESSAGE}
+        require(!KitUtils.isEmpty(apiKey)) { FAILED_TO_INITIALIZE_KIT_MESSAGE }
         return apiKey
     }
 
     private fun getOptionsFromConfiguration(settings: Map<String, String>): MutableMap<String, Any>? {
-        val options = HashMap<String, Any> ()
+        val options = HashMap<String, Any>()
         addAggressiveOption(options, settings)
         return if (options.isEmpty()) null else options
     }
 
     private fun addAggressiveOption(
         options: MutableMap<String, Any>,
-        settings: Map<String, String>
+        settings: Map<String, String>,
     ) {
         val agg = settings[AGGRESSIVE].toBoolean()
         options[TAPLYTICS_AGGRESSIVE] = agg
@@ -91,7 +100,10 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
     /**
      * AttributeListener Interface
      */
-    override fun setUserAttribute(attributeKey: String, attributeValue: String?) {
+    override fun setUserAttribute(
+        attributeKey: String,
+        attributeValue: String?,
+    ) {
         try {
             val attr = JSONObject()
             if (attributeValue != null) {
@@ -108,14 +120,17 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
 
     override fun setAllUserAttributes(
         attributes: Map<String, String>,
-        attributeLists: Map<String, List<String>>
+        attributeLists: Map<String, List<String>>,
     ) {
         for ((key, value) in attributes) {
             setUserAttribute(key, value)
         }
     }
 
-    override fun setUserIdentity(identityType: IdentityType, s: String?) {
+    override fun setUserIdentity(
+        identityType: IdentityType,
+        s: String?,
+    ) {
         // no-op
     }
 
@@ -129,7 +144,7 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
 
     override fun onIdentifyCompleted(
         mParticleUser: MParticleUser,
-        filteredIdentityApiRequest: FilteredIdentityApiRequest
+        filteredIdentityApiRequest: FilteredIdentityApiRequest,
     ) {
         setUserAttributeFromRequest(filteredIdentityApiRequest)
     }
@@ -152,13 +167,16 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
         }
     }
 
-    override fun onLoginCompleted(user: MParticleUser, request: FilteredIdentityApiRequest) {
+    override fun onLoginCompleted(
+        user: MParticleUser,
+        request: FilteredIdentityApiRequest,
+    ) {
         setUserAttributeFromRequest(request)
     }
 
     override fun onLogoutCompleted(
         mParticleUser: MParticleUser,
-        filteredIdentityApiRequest: FilteredIdentityApiRequest
+        filteredIdentityApiRequest: FilteredIdentityApiRequest,
     ) {
         Taplytics.resetAppUser {
             // no-op
@@ -167,7 +185,7 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
 
     override fun onModifyCompleted(
         mParticleUser: MParticleUser,
-        request: FilteredIdentityApiRequest
+        request: FilteredIdentityApiRequest,
     ) {
         setUserAttributeFromRequest(request)
     }
@@ -181,14 +199,17 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
      */
     override fun logout(): List<ReportingMessage> = emptyList()
 
-    override fun setUserAttributeList(attribute: String, attributeValueList: List<String>) {}
+    override fun setUserAttributeList(
+        attribute: String,
+        attributeValueList: List<String>,
+    ) {}
 
     /**
      * CommerceListener Interface
      */
     override fun logEvent(event: CommerceEvent): List<ReportingMessage> {
         if (!KitUtils.isEmpty(event.productAction) &&
-            event.productAction.equals(Product.PURCHASE,true)
+            event.productAction.equals(Product.PURCHASE, true)
         ) {
             val transactionAttributes = event.transactionAttributes ?: return emptyList()
             val id = transactionAttributes.id
@@ -215,7 +236,7 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
 
     override fun logScreen(
         screenName: String,
-        screenAttributes: Map<String, String>
+        screenAttributes: Map<String, String>,
     ): List<ReportingMessage> {
         Taplytics.logEvent(screenName)
         return createReportingMessages(ReportingMessage.MessageType.SCREEN_VIEW)
@@ -227,24 +248,22 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
     override fun logException(
         exception: Exception,
         exceptionAttributes: Map<String, String>,
-        message: String
+        message: String,
     ): List<ReportingMessage> = emptyList()
-
 
     override fun logError(
         message: String,
-        errorAttributes: Map<String, String>
+        errorAttributes: Map<String, String>,
     ): List<ReportingMessage> = emptyList()
 
     override fun leaveBreadcrumb(breadcrumb: String): List<ReportingMessage> = emptyList()
 
-
-    //put all these together
+    // put all these together
     override fun logLtvIncrease(
         valueIncreased: BigDecimal,
         valueTotal: BigDecimal,
         eventName: String,
-        contextInfo: Map<String, String>
+        contextInfo: Map<String, String>,
     ): List<ReportingMessage> = emptyList()
 
     override fun setOptOut(optedOut: Boolean): List<ReportingMessage> {
@@ -280,14 +299,16 @@ open class TaplyticsKit : KitIntegration(), AttributeListener, KitIntegration.Ev
         private const val DELAYED_START = "delayedStartTaplytics"
         private const val FAILED_TO_INITIALIZE_KIT_MESSAGE = "Failed to initialize Taplytics SDK - an API key is required"
         private const val KIT_NAME = "Taplytics"
+
         @JvmField
         var delayInitializationUntilSessionStart = false
+
         @JvmField
         var started = false
 
         /**
          * tlOptions get and set methods
          */
-        var tlOptions = HashMap<String?, Any?> ()
+        var tlOptions = HashMap<String?, Any?>()
     }
 }

@@ -41,6 +41,9 @@ repositories {
 
 android {
     namespace 'com.mparticle.kits.taplytics'
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         minSdkVersion 21
     }
